@@ -1,0 +1,189 @@
+#include <RedBot.h>
+
+// --- Hardware ---
+RedBotMotors  motors;
+RedBotEncoder encoders(A2, A3);   // change pins if your encoders are wired differently
+
+// --- Command state ---
+enum Mode { IDLE, RUNNING };
+Mode mode = IDLE;
+
+// Tick budgets for this command (how far each wheel is allowed to move)
+long budgetL = 0;
+long budgetR = 0;
+
+// Encoders at the moment the command started
+long startL = 0;
+long startR = 0;
+
+// Speeds for this command (signed: direction + magnitude)
+int speedL = 0;
+int speedR = 0;
+
+// Serial input buffer
+String rxBuf;
+
+// --- Helper: clamp PWM to valid range ---
+int clampPWM(int v) {
+  if (v > 255) return 255;
+  if (v < -255) return -255;
+  return v;
+}
+
+// --- Start a new ticksLR command ---
+// L_budget, R_budget  >= 0: maximum extra ticks allowed for this move
+// L_speed,  R_speed   in [-255, 255]: speed and direction for each wheel
+void startTicksLR(long L_budget, long R_budget, int L_speed, int R_speed) {
+  // Ensure budgets are non-negative
+  if (L_budget < 0) L_budget = 0;
+  if (R_budget < 0) R_budget = 0;
+
+  // Snapshot encoders at start of command
+  startL = encoders.getTicks(LEFT);
+  startR = encoders.getTicks(RIGHT);
+
+  budgetL = L_budget;
+  budgetR = R_budget;
+
+  speedL = clampPWM(L_speed);
+  speedR = clampPWM(R_speed);
+
+  mode = RUNNING;
+}
+
+// --- Stop everything immediately ---
+void stopAll() {
+  motors.stop();
+  speedL = 0;
+  speedR = 0;
+  mode = IDLE;
+}
+
+// --- Handle one complete text command from serial ---
+void handleCommand(const String &cmdRaw) {
+  String cmd = cmdRaw;
+  cmd.trim();
+
+  if (cmd.length() == 0) {
+    return;
+  }
+
+  // Lowercase for easier comparison
+  cmd.toLowerCase();
+
+  // "stop" -> cancel motion
+  if (cmd == "stop") {
+    stopAll();
+    Serial.println(F("OK stop"));
+    return;
+  }
+
+  // "ticksLR L_budget R_budget L_speed R_speed"
+  if (cmd.startsWith("tickslr")) {
+    // Find spaces
+    int s1 = cmd.indexOf(' ');
+    int s2 = cmd.indexOf(' ', s1 + 1);
+    int s3 = cmd.indexOf(' ', s2 + 1);
+    int s4 = cmd.indexOf(' ', s3 + 1);
+
+    if (s1 < 0 || s2 < 0 || s3 < 0 || s4 < 0) {
+      Serial.println(F("ERR ticksLR syntax"));
+      return;
+    }
+
+    long L_budget = cmd.substring(s1 + 1, s2).toInt();
+    long R_budget = cmd.substring(s2 + 1, s3).toInt();
+    int  L_speed  = cmd.substring(s3 + 1, s4).toInt();
+    int  R_speed  = cmd.substring(s4 + 1).toInt();
+
+    startTicksLR(L_budget, R_budget, L_speed, R_speed);
+
+    Serial.print(F("OK ticksLR Lb="));
+    Serial.print(L_budget);
+    Serial.print(F(" Rb="));
+    Serial.print(R_budget);
+    Serial.print(F(" Ls="));
+    Serial.print(L_speed);
+    Serial.print(F(" Rs="));
+    Serial.println(R_speed);
+    return;
+  }
+
+  // Unknown command
+  Serial.print(F("ERR unknown: "));
+  Serial.println(cmd);
+}
+
+// --- Setup ---
+void setup() {
+  Serial.begin(9600);
+  // Small delay to allow USB serial to come up
+  delay(1000);
+
+  Serial.println(F("RedBot ticksLR firmware ready"));
+  Serial.println(F("Commands:"));
+  Serial.println(F("  ticksLR L_budget R_budget L_speed R_speed"));
+  Serial.println(F("  stop"));
+}
+
+// --- Main loop ---
+void loop() {
+  // --- 1. Serial input handling ---
+  while (Serial.available() > 0) {
+    char c = (char)Serial.read();
+
+    if (c == '\r') {
+      // ignore CR (common in CRLF)
+      continue;
+    } else if (c == '\n') {
+      // End of line -> process command
+      if (rxBuf.length() > 0) {
+        handleCommand(rxBuf);
+        rxBuf = "";
+      }
+    } else {
+      rxBuf += c;
+      // Avoid runaway buffer if no newline ever arrives
+      if (rxBuf.length() > 80) {
+        rxBuf.remove(0);  // or clear, but this just drops earliest chars
+      }
+    }
+  }
+
+  // --- 2. Motion control ---
+  if (mode == RUNNING) {
+    long curL = encoders.getTicks(LEFT);
+    long curR = encoders.getTicks(RIGHT);
+
+    long dL = curL - startL;  // how many ticks used for this command
+    long dR = curR - startR;
+
+    // Use absolute distance moved so negative (reverse) motion still counts
+    long absdL = (dL >= 0) ? dL : -dL;
+    long absdR = (dR >= 0) ? dR : -dR;
+
+    bool leftDone  = (absdL >= budgetL);
+    bool rightDone = (absdR >= budgetR);
+
+    // Left wheel control
+    if (leftDone || budgetL == 0) {
+      motors.leftDrive(0);
+    } else {
+      motors.leftDrive(speedL);
+    }
+
+    // Right wheel control
+    if (rightDone || budgetR == 0) {
+      motors.rightDrive(0);
+    } else {
+      motors.rightDrive(speedR);
+    }
+
+    // When both budgets reached, finish command
+    if (leftDone && rightDone) {
+      mode = IDLE;
+      motors.stop();
+      Serial.println(F("DONE ticksLR"));
+    }
+  }
+}

@@ -1,0 +1,30 @@
+
+###### NEEDED ######
+
+light sensitivity
+idle moving
+
+
+
+
+
+
+####### BEHAVIOR #######
+
+init everything
+
+
+LOOP 
+
+    voltage level (INA260, turn on led based on voltage level)
+    what event is live? (food, scared, loiter) (hand_gesture)
+    where am i? (grid and robot coordinates)
+    where should i go? (grid and event based coordinates)
+
+    send motor command (go forward or backward number of grid blocks / turn in direction to other grid block)
+        start motor commands
+        check collision
+        stop motor commands
+        send motor command DONE or COLLISION
+
+START OVER

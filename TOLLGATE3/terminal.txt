@@ -1,0 +1,100 @@
+cd TOLLGATE3
+source t3-crab/bin/activate
+source /opt/ros/jazzy/setup.bash
+sudo -E /home/hieut/TOLLGATE3/t3-crab/bin/python /home/hieut/TOLLGATE3/Integration-main/demo/robot_positions_echo.py
+ros2 topic list
+
+cd /home/hieut/TOLLGATE3/Integration-main/demo
+source /opt/ros/jazzy/setup.bash
+python3 /home/hieut/TOLLGATE3/Integration-main/demo/robot_positions_echo.py
+# or specify a different topic:
+python3 robot_positions_echo.py --topic /robotPositions
+
+       ros2 topic info -v /robotPositions
+       
+################################################################
+
+(t3-crab) hieut@hieut-desktop:~/TOLLGATE3$ python3 T3_main.py
+Opening /dev/serial/by-id/usb-FTDI_FT232R_USB_UART_A10LIMZE-if00-port0 @ 9600...
+Reading INA260...
+V = 11.730 V, I = -0.425 A
+[INFO] Sanity forward move: 96 ticks @ 100
+TX: ticksLR 96 96 100 100
+RX: RedBot ticksLR firmware ready
+RX: Commands:
+RX: ticksLR L_budget R_budget L_speed R_speed
+RX: stop
+RX: OK ticksLR Lb=96 Rb=96 Ls=100 Rs=100
+RX: DONE ticksLR
+[OK] Sanity move result: True
+[OK] RobotPositionAPI started topic='/robotPositions' type='string'
+[INFO] Waiting for start position ids=[0, 1] min_cert=0.45 ...
+[OK] Start id=1 row=1211.34 col=1155.49 ang=0.879626179483428 cert=0.63
+[INFO] Stabilize heading: short forward move
+TX: ticksLR 48 48 100 100
+RX: OK ticksLR Lb=48 Rb=48 Ls=100 Rs=100
+RX: DONE ticksLR
+[OK] Stabilization move result: True
+[INFO] Heading (angle): 0.879626179483428
+[INFO] Waiting for hand gesture (PALM/FIST)...
+INFO: Created TensorFlow Lite XNNPACK delegate for CPU.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+W0000 00:00:1764262115.305995    4782 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1764262115.375558    4782 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+/home/hieut/TOLLGATE3/t3-crab/lib/python3.12/site-packages/google/protobuf/symbol_database.py:55: UserWarning: SymbolDatabase.GetPrototype() is deprecated. Please use message_factory.GetMessageClass() instead. SymbolDatabase.GetPrototype() will be removed soon.
+  warnings.warn('SymbolDatabase.GetPrototype() is deprecated. Please '
+[INFO] Gesture=PALM pos=(377.0, 1246.0)
+[ACT] PALM → forward 96 ticks
+TX: ticksLR 96 96 100 100
+RX: OK ticksLR Lb=96 Rb=96 Ls=100 Rs=100
+RX: DONE ticksLR
+[OK] GestureRecognizer stopped
+Reading INA260...
+V = 11.695 V, I = -0.662 A
+[OK] RobotPositionAPI stopped
+[OK] INA260 stopped
+Serial closed.
+[OK] RedBot stopped
+(t3-crab) hieut@hieut-desktop:~/TOLLGATE3$ python3 T3_main.py
+Opening /dev/serial/by-id/usb-FTDI_FT232R_USB_UART_A10LIMZE-if00-port0 @ 9600...
+Reading INA260...
+V = 11.728 V, I = -0.415 A
+[INFO] Sanity forward move: 96 ticks @ 100
+TX: ticksLR 96 96 100 100
+RX: RedBot ticksLR firmware ready
+RX: Commands:
+RX: ticksLR L_budget R_budget L_speed R_speed
+RX: stop
+RX: OK ticksLR Lb=96 Rb=96 Ls=100 Rs=100
+RX: DONE ticksLR
+[OK] Sanity move result: True
+[OK] RobotPositionAPI started topic='/robotPositions' type='string'
+[INFO] Waiting for start position ids=[0, 1] min_cert=0.45 ...
+[OK] Start id=1 row=1211.59 col=1155.58 ang=0.966453517689192 cert=0.64
+[INFO] Stabilize heading: short forward move
+TX: ticksLR 48 48 100 100
+RX: OK ticksLR Lb=48 Rb=48 Ls=100 Rs=100
+RX: DONE ticksLR
+[OK] Stabilization move result: True
+[INFO] Heading (angle): 0.966453517689192
+[INFO] Waiting for hand gesture (PALM/FIST)...
+INFO: Created TensorFlow Lite XNNPACK delegate for CPU.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+W0000 00:00:1764262138.963044    4846 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1764262139.108008    4848 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+/home/hieut/TOLLGATE3/t3-crab/lib/python3.12/site-packages/google/protobuf/symbol_database.py:55: UserWarning: SymbolDatabase.GetPrototype() is deprecated. Please use message_factory.GetMessageClass() instead. SymbolDatabase.GetPrototype() will be removed soon.
+  warnings.warn('SymbolDatabase.GetPrototype() is deprecated. Please '
+[INFO] Gesture=FIST pos=(418.0, 1336.0)
+[ACT] FIST → backward 64 ticks
+TX: ticksLR -64 -64 100 100
+RX: OK ticksLR Lb=-64 Rb=-64 Ls=100 Rs=100
+RX: DONE ticksLR
+[OK] GestureRecognizer stopped
+Reading INA260...
+V = 11.709 V, I = -0.501 A
+[OK] RobotPositionAPI stopped
+[OK] INA260 stopped
+Serial closed.
+[OK] RedBot stopped
+(t3-crab) hieut@hieut-desktop:~/TOLLGATE3$ 
+
